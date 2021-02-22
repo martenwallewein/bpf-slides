@@ -437,7 +437,7 @@
             <li>Test with Multipath Bittorrent over SCION</li>
             <li>Continue with more experiments</li>
             <li>Investigate why single connections are limited to max 2Gbit/s</li>
-            <li>Support multiple registered apps instead of port range</li>
+            <li>Support multiple registered apps instead of hard coded port range</li>
             <li>Aim for bringing this prototype upstream once its a working application</li>
         </ul>
 
@@ -453,6 +453,44 @@
             <li>Code changes for SCION-Apps can be found here: https://github.com/martenwallewein/scion-apps/tree/feature/listen-udp</li>
             <li>XDP code is currently in a private repo, because SCION packet parsing was adapted from hercules</li>
         </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+
+    <div class="step slide">
+        <h1 style="margin-top: 20%;">Thanks for your attention!</h1>
+    
+        <div class="notes">
+        </div>
+    </div>
+
+
+    <div class="step slide">
+        <h1>What does the Dispatcher?</h1>
+        <ul>
+            <li>Handles incoming and outgoing SCION packets on SCION hosts, does service resolution</li>
+            <li>From design perspective very useful</li>
+            <ul>
+                <li>Last border router on path does not need to lokup l4 port</li>
+                <li>Dispatcher keeps map of registered apps/services, redirects packets</li>
+            </ul>
+            <li>From performance perspective questionable</li>
+            <ul>
+                <li>All SCION data packets traverse the kernel 2x on each host</li>
+            </ul>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+
+    <div class="step slide">
+        <h1>XDP</h1>
+        <div class="img-container">
+            <img src="images/xdp.PNG" 
+            alt="SCION BT setup" class="fullscreen-img" style="width: 75%"/>
+        </div>
 
         <div class="notes">
         </div>
