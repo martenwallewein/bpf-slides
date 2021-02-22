@@ -115,7 +115,8 @@
     -->
     <div class="step slide title" data-x="-2200" data-y="-3000">
         <h1>SCION Performance Analysis: <br />
-            High speed file transfer</h1>
+            Bittorrent over SCION</h1>
+        <h5 class="fixed-title">+ Short HSR Deployment Update</h5>
         <h2>Marten Gartner, Martin Koppehel, David Hausheer, Thorben Krüger</h2>
         <h3>2021</h3>
 
@@ -150,6 +151,32 @@
     </div>-->
 
     <div class="step slide" data-rel-x="2200" data-rel-y="0">
+        <h1>HSR Deployment Status</h1>
+        <div class="img-container">
+            <img src="images/hsr-state.jpg" 
+            alt="SCION BT setup" class="fullscreen-img" style="width: 60%"/>
+            </div>
+
+        <div class="notes">
+        </div>
+    </div>
+
+    <div class="step slide">
+        <h1>HSR: Next Steps</h1>
+        <ul>
+            <li>Fix install on curie for hercules experiments</li>
+            <ul>
+                <li>Use other machine or get another link and let HSR use the respective PF</li>
+            </ul>
+            <li>Complete Install Guide</li>
+            <li>Check further machines to deploy on</li>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+
+    <div class="step slide">
         <h1>Multipath Bittorrent over SCION</h1>
         <ul>
             <li>As widely used file transfer protocol, Bittorrent was ported to run on SCION</li>
@@ -165,21 +192,95 @@
     </div>
 
     <div class="step slide">
-        <h1>Setup</h1>
+        <h1>Bittorrent over SCION - Setup</h1>
         <div class="img-container">
-        <img src="images/scion-bt-setup.jpg" 
+        <img src="images/scion-data.flow.jpg" 
         alt="SCION BT setup" class="fullscreen-img" style="width: 80%"/>
         </div>
         <ul>
-            <li>Target: Achieve 10Gbit/s bandwidth with Multipath Bittorrent over SCION</li>
-            <li>Results: Achieved ~2Gbit/s bandwidth with Multipath Bittorrent over SCION</li>
+            <li>Target: Achieve 10Gbit/s bandwidth with Bittorrent over SCION</li>
+            <li>Results: Achieved ~2.5Gbit/s bandwidth with HSR and Jumbo Frames</li>
             <li>With Bittorrent over TCP and parallel downloads ~8Gbit/s possible</li>
         </ul>
 
         <div class="notes">
         </div>
     </div>
+    <div class="step slide">
+        <h1>Bottleneck: Dispatcher?</h1>
+        <div class="img-container">
+        <img src="images/scion-data.flow.jpg" 
+        alt="SCION BT setup" class="fullscreen-img" style="width: 80%"/>
+        </div>
+        <ul>
+            <li>Dispatcher handles all incoming/outgoing SCION packets</li>
+            <li>Each packet goes through UDP Socket and Unix Socket</li>
+            <li>In Summary: Each Packet goes 4x through linux kernel</li>
+        </ul>
 
+        <div class="notes">
+        </div>
+    </div>
+    <div class="step slide">
+        <h1>Improving the Dispatcher?</h1>
+        <ul>
+            <li>First idea was to bypass the dispatcher, like hercules does</li>
+            <li>This approach only works for particular apps, which is absolutely fine</li>
+            <li>Consequently: Adapt the dispatcher to improve all SCION apps</li>
+            <li>Approach: Improve only the forwarding part</li>
+            <ul>
+                <li>Receiver: Let apps open "normal" UDP ports and rewrite the incoming packets using BPF/XDP</li>
+                <li>Sender: Send SCION packets to nexthop underlay address (prob. border router)</li>
+            </ul>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+    <div class="step slide">
+        <h1>Sender side: Use NextHop</h1>
+        <div class="img-container">
+        <img src="images/scion-dispatcher.jpg" 
+        alt="SCION BT setup" class="fullscreen-img" style="width: 75%"/>
+        </div>
+        <ul>
+            <li>SCION path contains nexthop field, which is used by the dispatcher</li>
+            <li>The app can send to the nexthop directly</li>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+    <div class="step slide">
+        <h1>Receiver side: UDP Ports + BPF</h1>
+        <div class="img-container">
+        <img src="images/scion-dispatcher-2.jpg" 
+        alt="SCION BT setup" class="fullscreen-img" style="width: 75%"/>
+        </div>
+        <ul>
+            <li>App listens on UDP Port wrapped by SCION PacketConn</li>
+            <li>All incoming packets with the target SCION L4 UDP Port are rewritten</li>
+            <li>Only 1x through Kernel on each machine</li>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+    <div class="step slide">
+        <h1>Receiver side: Packet rewriting</h1>
+        <div class="img-container">
+        <img src="images/scion-port-rewrite.jpg" 
+        alt="SCION BT setup" class="fullscreen-img" style="width: 40%"/>
+        </div>
+        <ul>
+            <li>BPF app opens packets containing the UDP TargetPort of the dispatcher</li>
+            <li>Lookup L4 SCION UDP dest, write into UDP TargetPort</li>
+        </ul>
+
+        <div class="notes">
+        </div>
+    </div>
+    <!--
     <div class="step slide">
         <h1>Reminder: SCION AS/Host Structure</h1>
         <div class="img-container">
@@ -232,6 +333,7 @@
         </div>
         <ul>
             <li>Results: Slightly better, but not as good as expected</li>
+            <li>With parallel downloads, around 2.5Gbit/s reached</li>
         </ul>
 
         <div class="notes">
@@ -300,16 +402,16 @@
         <div class="notes">
         </div>
     </div>
-
+-->
     <div class="step slide">
         <h1>New SCION Data Flow</h1>
         <div class="img-container">
-        <img src="images/scion-data-path-xdp.jpg" 
+        <img src="images/scion-data-flow-new.jpg" 
         alt="SCION BT setup" class="fullscreen-img" style="width: 80%"/>
         </div>
         <ul>
-            <li>Sending app sends directly to border router, which is the next hop in the path</li>
-            <li>Receiver rewrites data packets (not control messages) to reach target destination port</li>
+            <li>Only Bittorrent specific SCION packets are changed</li>
+            <li>Remaining SCION traffic remains untouched</li>
         </ul>
         <div class="notes">
         </div>
@@ -319,7 +421,7 @@
         <h1>First Results: Raw SCION/UDP</h1>
         <div class="img-container">
         <img src="images/scion-udp-results.jpg" 
-        alt="SCION BT setup" class="fullscreen-img" style="width: 38%"/>
+        alt="SCION BT setup" class="fullscreen-img" style="width: 40%"/>
         </div>
         <ul>
             <li>Measurements done on 10Gbit/s link with HSR, Jumbo Frames and simple bandwidth tester</li>
@@ -333,6 +435,7 @@
         <ul>
             <li>Fix SCION/QUIC packet sending (handshake error)</li>
             <li>Test with Multipath Bittorrent over SCION</li>
+            <li>Continue with more experiments</li>
             <li>Investigate why single connections are limited to max 2Gbit/s</li>
             <li>Support multiple registered apps instead of port range</li>
             <li>Aim for bringing this prototype upstream once its a working application</li>
@@ -345,9 +448,10 @@
     <div class="step slide">
         <h1>Notes:</h1>
         <ul>
+            <li>Related issue from Anapaya for removing the dispatcher: https://github.com/scionproto/scion/issues/3961</li>
             <li>Code changes for SCION can be found here: https://github.com/martenwallewein/scion/tree/feature/udp-listen-dial</li>
             <li>Code changes for SCION-Apps can be found here: https://github.com/martenwallewein/scion-apps/tree/feature/listen-udp</li>
-            <li>XDP code is currently in a private repo, because we used code snippets from hercules for the prototype</li>
+            <li>XDP code is currently in a private repo, because SCION packet parsing was adapted from hercules</li>
         </ul>
 
         <div class="notes">

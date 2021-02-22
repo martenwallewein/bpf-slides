@@ -388,3 +388,8 @@ td {
 .fullscreen-img{
     height: auto;
 }
+
+.fixed-title {
+    margin-top: 10em;
+    text-align: center;
+}
